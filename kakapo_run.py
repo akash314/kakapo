@@ -3,14 +3,14 @@ from Bio import Medline
 from owlery import Connection
 import queries.make_academic_article as create_query
 import yaml
-import db_util
+import utils.db_util as db_util
 
 
 def main():
     print "In main"
     Entrez.email = "agarwalakash@ufl.edu"
 
-    conn = db_util.create_connection("kakapo.db")
+    conn = db_util.create_connection("db/kakapo.db")
     authors = db_util.get_all_people(conn)
     for author in authors:
         process_author(author)
@@ -61,7 +61,7 @@ def get_pubmed_docs_for_author(author_name):
 
 
 def get_vivo_connection():
-    config_path = "config.yaml"
+    config_path = "config/config.yaml"
     config = get_config(config_path)
 
     email = config.get('email')
