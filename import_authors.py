@@ -13,7 +13,7 @@ def main():
 
 def insert_person(conn, person):
     person_values = (person[0], person[2])
-    sql = ''' INSERT INTO PERSON(N_NUMBER,FULL_NAME)
+    sql = ''' INSERT INTO person(full_name, n_number)
               VALUES(?,?) '''
     cur = conn.cursor()
     cur.execute(sql, person_values)
