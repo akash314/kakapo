@@ -10,24 +10,62 @@ def main():
     print "In main"
     Entrez.email = "agarwalakash@ufl.edu"
 
-    conn = db_util.create_connection("db/kakapo.db")
-    authors = db_util.get_all_people(conn)
+    sqlite_conn = db_util.create_connection("db/kakapo.db")
+    authors = db_util.get_all_people(sqlite_conn)
+    authors = [authors[0]]
+    print("Authors: ")
+    print authors
+    process_all_authors(authors, sqlite_conn)
+
+
+def process_all_authors(authors, sqlite_conn):
+    existing_authors = {}
+    existing_articles = set()
+
+    # Create an existing authors dictionary
     for author in authors:
-        process_author(author)
-    '''
-    with open('vivo_author_nnumber.csv', 'rb') as author_csv:
-        reader = csv.reader(author_csv)
-        for row in reader:
-            process_author(row)
-    '''
+        existing_authors.update({author[0]: {"n_num": author[2], "pubs": set()}})
+        # TODO Instead of setting empty pubs read from db
+        # TODO Add existing article to existing_articles set so if article exists do not create a duplicate.
 
+    for author in authors:
+        print author
+        author_name = author[0]
+        n_number = author[2]
+        vivo_conn = get_vivo_connection()
+        doc_ids = get_pubmed_doc_ids_for_author(author_name)
+        doc_set = set(doc_ids)
+        existing_author = existing_authors.get(author_name)
+        existing_docs = existing_author.get("pubs")
 
-def process_author(author):
-    author_name = author[2]
-    connection = get_vivo_connection()
-    doc_list = get_pubmed_docs_for_author(author_name)
-    for doc in doc_list:
-        add_academic_article(connection, doc, author[0])
+        new_docs_set = doc_set.difference(existing_docs)
+        print "New docs"
+        print new_docs_set
+        new_docs_list = get_pubmed_docs_for_ids(new_docs_set)
+
+        '''
+        for doc in new_docs_list:
+            add_academic_article(vivo_conn, doc, n_number)
+            '''
+
+        # TODO 1. Save updated doc list to disk
+        # TODO 2. If the document has more authors add reference to other authors.
+        # TODO 3. Create other authors if needed else update existing.
+        # TODO 4. Add AUID and save to disk if available.
+
+        # Update author to include new docs
+        existing_docs.update(new_docs_set)
+        print "Update existing"
+        print existing_docs
+        existing_author["pubs"] = existing_docs
+        existing_authors[author_name] = existing_author
+
+        journal_ids_string = ",".join(existing_author["pubs"])
+        update_obj = (journal_ids_string, n_number)
+        db_util.update_author(sqlite_conn, update_obj)
+
+        # Update article list
+        existing_articles.update(existing_docs)
 
 
 def add_academic_article(connection, doc, author_nnum):
@@ -46,17 +84,21 @@ def add_academic_article(connection, doc, author_nnum):
     print(response)
 
 
-def get_pubmed_docs_for_author(author_name):
+def get_pubmed_doc_ids_for_author(author_name):
     search_term = author_name + "[Full Author Name]"
-
     handle = Entrez.esearch(db="pubmed", term=search_term)
     record = Entrez.read(handle)
-
     print "Journal IDs for %s: " % author_name + ",".join(record['IdList'])
 
-    handle = Entrez.efetch(db="pubmed", id=record['IdList'], rettype="MEDLINE", retmode="text")
+    return record['IdList']
+
+
+def get_pubmed_docs_for_ids(id_set):
+    id_list = list(id_set)
+    handle = Entrez.efetch(db="pubmed", id=id_list, rettype="MEDLINE", retmode="text")
     records = Medline.parse(handle)
     doc_list = list(records)
+
     return doc_list
 
 

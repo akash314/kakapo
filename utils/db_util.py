@@ -23,8 +23,21 @@ def get_all_people(conn):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT * FROM PERSON;")
+    cur.execute('''SELECT full_name, name, n_number,auid, articles FROM person;''')
     rows = cur.fetchall()
 
     return rows
+
+
+def update_author(conn, values):
+    """
+    Update author with new journal ids
+    :param conn: the Connection object
+    :param values: update params
+    :return:
+    """
+    print values
+    cur = conn.cursor()
+    cur.execute('''UPDATE person SET articles = ? WHERE n_number = ?;''', values)
+    conn.commit()
 
