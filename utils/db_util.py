@@ -41,3 +41,12 @@ def update_author(conn, values):
     cur.execute('''UPDATE person SET articles = ? WHERE n_number = ?;''', values)
     conn.commit()
 
+
+def add_uploaded_articles(conn, values):
+    """
+
+    :return:
+    """
+    cur = conn.cursor()
+    cur.executemany('''INSERT INTO article ('pubmed_id', 'n_number') VALUES (?, ?)''', values)
+    conn.commit()

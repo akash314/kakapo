@@ -12,6 +12,7 @@ def main():
 
     sqlite_conn = db_util.create_connection("db/kakapo.db")
     authors = db_util.get_all_people(sqlite_conn)
+    authors = [authors[0]]
     print("Authors: ")
     print authors
     process_all_authors(authors, sqlite_conn)
@@ -42,8 +43,13 @@ def process_all_authors(authors, sqlite_conn):
         print new_docs_set
         new_docs_list = get_pubmed_docs_for_ids(new_docs_set)
 
+        pubmed_id_to_nnum = []
+
         for doc in new_docs_list:
-            add_academic_article(vivo_conn, doc, n_number)
+            params = add_academic_article(vivo_conn, doc, n_number)
+            pubmed_id_to_nnum.append((params['Article'].pubmed_id, params['Article'].n_number))
+
+        db_util.add_uploaded_articles(sqlite_conn, pubmed_id_to_nnum)
 
         # TODO 1. Save updated doc list to disk
         # TODO 2. If the document has more authors add reference to other authors.
@@ -79,6 +85,7 @@ def add_academic_article(connection, doc, author_nnum):
     print (params["Article"]).__dict__
     response = create_query.run(connection, **params)
     print(response)
+    return params
 
 
 def get_pubmed_doc_ids_for_author(author_name):
