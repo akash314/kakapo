@@ -1,9 +1,8 @@
 from Bio import Entrez
 from Bio import Medline
-from owlery import Connection
 import queries.make_academic_article as create_query
-import yaml
 import utils.db_util as db_util
+import utils.vivo_util as vivo_util
 
 
 def main():
@@ -32,7 +31,7 @@ def process_all_authors(authors, sqlite_conn):
         print author
         author_name = author[0]
         n_number = author[2]
-        vivo_conn = get_vivo_connection()
+        vivo_conn = vivo_util.get_vivo_connection()
         doc_ids = get_pubmed_doc_ids_for_author(author_name)
         doc_set = set(doc_ids)
         existing_author = existing_authors.get(author_name)
@@ -43,13 +42,13 @@ def process_all_authors(authors, sqlite_conn):
         print new_docs_set
         new_docs_list = get_pubmed_docs_for_ids(new_docs_set)
 
-        pubmed_id_to_nnum = []
+        nnum_to_pmid = []
 
         for doc in new_docs_list:
             params = add_academic_article(vivo_conn, doc, n_number)
-            pubmed_id_to_nnum.append((params['Article'].pubmed_id, params['Article'].n_number))
+            nnum_to_pmid.append((params['Article'].n_number, params['Article'].pubmed_id))
 
-        db_util.add_uploaded_articles(sqlite_conn, pubmed_id_to_nnum)
+        db_util.add_uploaded_articles(sqlite_conn, nnum_to_pmid)
 
         # TODO 1. Save updated doc list to disk
         # TODO 2. If the document has more authors add reference to other authors.
@@ -106,29 +105,7 @@ def get_pubmed_docs_for_ids(id_set):
     return doc_list
 
 
-def get_vivo_connection():
-    config_path = "config/config.yaml"
-    config = get_config(config_path)
 
-    email = config.get('email')
-    password = config.get ('password')
-    update_endpoint = config.get('update_endpoint')
-    query_endpoint = config.get('query_endpoint')
-    vivo_url = config.get('upload_url')
-    check_url = config.get('checking_url')
-
-    connection = Connection(vivo_url, check_url, email, password, update_endpoint, query_endpoint)
-    return connection
-
-
-def get_config(config_path):
-    try:
-        with open(config_path, 'r') as config_file:
-            config = yaml.load(config_file.read())
-    except:
-        print("Error: Check config file")
-        exit()
-    return config
 
 if __name__ == '__main__':
     main()

@@ -36,17 +36,18 @@ def update_author(conn, values):
     :param values: update params
     :return:
     """
-    print values
     cur = conn.cursor()
-    cur.execute('''UPDATE person SET articles = ? WHERE n_number = ?;''', values)
+    cur.execute('''UPDATE person SET articles = ? WHERE n_number = ?''', values)
     conn.commit()
 
 
 def add_uploaded_articles(conn, values):
     """
-
+    Store existing articles pubmed_id and n_number
+    :param conn: the Connection object
+    :param values: list of pubmed_id, n_number pairs
     :return:
     """
     cur = conn.cursor()
-    cur.executemany('''INSERT INTO article ('pubmed_id', 'n_number') VALUES (?, ?)''', values)
+    cur.executemany('''INSERT INTO article ('n_number', 'pubmed_id') VALUES (?, ?)''', values)
     conn.commit()
