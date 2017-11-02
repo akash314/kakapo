@@ -11,7 +11,6 @@ def main():
 
     sqlite_conn = db_util.create_connection("db/kakapo.db")
     authors = db_util.get_all_people(sqlite_conn)
-    authors = [authors[0]]
     print("Authors: ")
     print authors
     process_all_authors(authors, sqlite_conn)
@@ -64,6 +63,8 @@ def process_all_authors(authors, sqlite_conn):
 
         journal_ids_string = ",".join(existing_author["pubs"])
         update_obj = (journal_ids_string, n_number)
+
+        # Associate new pubmed ids with person
         db_util.update_author(sqlite_conn, update_obj)
 
         # Update article list
@@ -71,6 +72,14 @@ def process_all_authors(authors, sqlite_conn):
 
 
 def add_academic_article(connection, doc, author_nnum):
+    """
+    Create new article in vivo
+    :param connection: vivo connection object
+    :param doc: article to add
+    :param author_nnum: author's n_number in vivo
+    :return: params
+    """
+
     params = create_query.get_params(connection)
     article = params["Article"]
     article.name = doc.get("TI")
@@ -83,11 +92,16 @@ def add_academic_article(connection, doc, author_nnum):
     author.n_number = author_nnum
     print (params["Article"]).__dict__
     response = create_query.run(connection, **params)
-    print(response)
+    #print(response)
     return params
 
 
 def get_pubmed_doc_ids_for_author(author_name):
+    """
+    Get the pubmed ids for all articles authored by a person
+    :param author_name: Full author name in pubmed (Of the form - lastname, firstname middle_initial)
+    :return: list of pubmed ids
+    """
     search_term = author_name + "[Full Author Name]"
     handle = Entrez.esearch(db="pubmed", term=search_term)
     record = Entrez.read(handle)
@@ -97,14 +111,17 @@ def get_pubmed_doc_ids_for_author(author_name):
 
 
 def get_pubmed_docs_for_ids(id_set):
+    """
+    Download journal articles from pubmed for given set of ids.
+    :param id_set: Python set containing pubmed ids
+    :return: List of articles.
+    """
     id_list = list(id_set)
     handle = Entrez.efetch(db="pubmed", id=id_list, rettype="MEDLINE", retmode="text")
     records = Medline.parse(handle)
     doc_list = list(records)
 
     return doc_list
-
-
 
 
 if __name__ == '__main__':

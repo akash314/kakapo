@@ -4,6 +4,11 @@ import utils.db_util as db_util
 
 
 def main():
+    """
+    Import existing article n_numbers for an author in sqlite person record
+    Also map n_number of article to corresponding pubmed id in article table
+    :return:
+    """
     sqlite_conn = db_util.create_connection("db/kakapo.db")
     vivo_conn = vivo_util.get_vivo_connection()
     authors = db_util.get_all_people(sqlite_conn)
