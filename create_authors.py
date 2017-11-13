@@ -1,11 +1,12 @@
-import vivo_queries.create_person as create_person
+import sys
 import utils.db_util as db_util
 import utils.vivo_util as vivo_util
+import vivo_queries.create_person as create_person
 
 
 def main():
     print "In main"
-    sqlite_conn = db_util.create_connection("db/kakapo.db")
+    sqlite_conn = db_util.create_connection(sys.argv[1])
     authors = db_util.get_all_people(sqlite_conn)
     print authors
     make_authors(authors)

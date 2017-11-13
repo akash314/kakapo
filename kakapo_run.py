@@ -1,18 +1,17 @@
-from Bio import Entrez
-from Bio import Medline
 import queries.make_academic_article as create_query
+import sys
 import utils.db_util as db_util
 import utils.vivo_util as vivo_util
+from Bio import Entrez
+from Bio import Medline
 
 
 def main():
     print "In main"
     Entrez.email = "agarwalakash@ufl.edu"
 
-    sqlite_conn = db_util.create_connection("db/kakapo.db")
+    sqlite_conn = db_util.create_connection(sys.argv[1])
     authors = db_util.get_all_people(sqlite_conn)
-    print("Authors: ")
-    print authors
     process_all_authors(authors, sqlite_conn)
 
 
@@ -37,6 +36,9 @@ def process_all_authors(authors, sqlite_conn):
         existing_docs = existing_author.get("pubs")
 
         new_docs_set = doc_set.difference(existing_docs)
+        if len(new_docs_set) <= 0:
+            continue
+
         print "New docs"
         print new_docs_set
         new_docs_list = get_pubmed_docs_for_ids(new_docs_set)
@@ -73,7 +75,8 @@ def process_all_authors(authors, sqlite_conn):
 
 def add_academic_article(connection, doc, author_nnum):
     """
-    Create new article in vivo
+    Create new article in vivo. You can find all the medline document
+    data element descriptions at https://www.nlm.nih.gov/bsd/mms/medlineelements.html
     :param connection: vivo connection object
     :param doc: article to add
     :param author_nnum: author's n_number in vivo

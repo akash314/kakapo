@@ -1,5 +1,6 @@
-import utils.db_util as db_util
 import csv
+import sys
+import utils.db_util as db_util
 
 
 def main():
@@ -7,7 +8,7 @@ def main():
     Import author and n_number from csv to sqlite
     :return:
     """
-    conn = db_util.create_connection("db/kakapo.db")
+    conn = db_util.create_connection(sys.argv[1])
     with open("csv/vivo_author_nnumber.csv", "rb") as authors_file:
         reader = csv.reader(authors_file)
         for row in reader:
