@@ -6,11 +6,11 @@ from Bio import Entrez
 from Bio import Medline
 
 
-def main():
+def main(argv1):
     print "In main"
     Entrez.email = "agarwalakash@ufl.edu"
 
-    sqlite_conn = db_util.create_connection(sys.argv[1])
+    sqlite_conn = db_util.create_connection(argv1)
     authors = db_util.get_all_people(sqlite_conn)
     process_all_authors(authors, sqlite_conn)
 
@@ -128,6 +128,6 @@ def get_pubmed_docs_for_ids(id_set):
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])
 
 
